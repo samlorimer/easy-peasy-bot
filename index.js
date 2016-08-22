@@ -105,7 +105,7 @@ bot, message) {
    bot.reply(message, 'Sounds like we are going drinking! :beers:');
 });
 
-controller.hears(['insurance'], ['direct_mention'], apiai.hears, function (bot, message) {
+controller.hears(['insurance'], ['direct_mention','direct_message'], apiai.hears, function (bot, message) {
    if(message.fulfillment.speech !== '') {
        bot.reply(message, message.fulfillment.speech);
    } else {
