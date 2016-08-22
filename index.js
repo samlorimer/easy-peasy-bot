@@ -56,6 +56,11 @@ if (process.env.TOKEN || process.env.SLACK_TOKEN) {
     process.exit(1);
 }
 
+// Added to integrate with API.AI bots and intents
+var apiai = require('botkit-middleware-apiai')({
+   token: process.env.APIAI_TOKEN
+});
+controller.middleware.receive.use(apiai.receive);
 
 /**
  * A demonstration for how to handle websocket events. In this case, just log when we have and have not
@@ -85,16 +90,34 @@ controller.on('bot_channel_join', function (bot, message) {
     bot.reply(message, "I'm here!")
 });
 
-controller.hears('hello', 'direct_message', function (bot, message) {
-    bot.reply(message, 'Hello!');
+controller.hears(['hello','hey'], ['mention','direct_mention','direct_message'], function (bot, message) {
+    bot.reply(message, 'Hey!');
+});
+controller.hears(['asahi','peroni'], ['mention','direct_mention','direct_message'], function (bot, message) {
+    bot.reply(message, 'yes... this is one of two slack-condoned beers :beer:');
+});
+controller.hears(['VB','Cascade','Little Creatures','Carlton Draught'], ['mention','direct_mention','direct_message'], function (bot, message) {
+    bot.reply(message, 'no no no... this is not a slack-condoned beer :(');
 });
 
+controller.hears('drinking', ['direct_message','mention','direct_mention'], apiai.hears, function (
+bot, message) {
+   bot.reply(message, 'Sounds like we are going drinking! :beers:');
+});
+
+controller.hears(['insurance'], ['direct_message','mention','direct_mention'], apiai.hears, function (bot, message) {
+   if(message.fulfillment.speech !== '') {
+       bot.reply(message, message.fulfillment.speech);
+   } else {
+       bot.reply(message, "You have successfully insured your " + message.entities['insured-entity'] + " starting on " + message.entities['date']+" valid in " + message.entities['geo-city']);
+   }
+});
 
 /**
  * AN example of what could be:
  * Any un-handled direct mention gets a reaction and a pat response!
  */
-//controller.on('direct_message,mention,direct_mention', function (bot, message) {
+// controller.on('direct_message,mention,direct_mention', function (bot, message) {
 //    bot.api.reactions.add({
 //        timestamp: message.ts,
 //        channel: message.channel,
@@ -103,6 +126,6 @@ controller.hears('hello', 'direct_message', function (bot, message) {
 //        if (err) {
 //            console.log(err)
 //        }
-//        bot.reply(message, 'I heard you loud and clear boss.');
+//        bot.reply(message, 'I live to serve... how, I do not know');
 //    });
-//});
+// });
